@@ -2,8 +2,9 @@
 from rxconfig import config
 from typing import List
 from PIL import Image
-
+import cv2
 import reflex as rx
+import numpy as np
 
 options: List[str] = [
     "LAB",
@@ -21,10 +22,12 @@ class State(rx.State):
     img : str = "/trees.png"
     newimg: str = "/trees.png"
     def updateImage(self):
-        with Image.open("image_edit_3/trees.png") as im:
-            # im.show()
-            im.save(f"assets/{self.option}Image.png")
-        self.newimg = "background.png"
+        path = "image_edit_3/trees.png"
+        with Image.open(path) as im:
+            openCVIm = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2GRAY)
+            impath = f"/{self.option}Image.png"
+            cv2.imwrite(impath, openCVIm)
+        self.newimg = impath
         return;
 
     @rx.var
@@ -55,8 +58,9 @@ def index():
             ),
             rx.button("Show!", on_click=State.updateImage),
         ),
-            rx.image(src=State.img_to_show, width="200px", height="auto"),
-            padding="10em",
+        rx.text(State.img_to_show),
+        rx.image(src=State.img_to_show, width="200px", height="auto"),
+        padding="10em",
         ),
     )
 
