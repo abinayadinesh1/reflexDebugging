@@ -1,61 +1,63 @@
 """Welcome to Reflex! This file outlines the steps to create a basic app."""
 from rxconfig import config
+from typing import List
+from PIL import Image
 
 import reflex as rx
+
+options: List[str] = [
+    "LAB",
+    "HSV",
+    "Greyscale",
+    "LUV",
+    "YUV",
+    "BayerGBRG",
+    "NV21"
+]
+
 class State(rx.State):
     """The app state."""
+    option: str = "No selection yet."
+    img : str = "/trees.png"
+    newimg: str = "/trees.png"
+    def updateImage(self):
+        with Image.open("image_edit_3/trees.png") as im:
+            # im.show()
+            im.save(f"assets/{self.option}Image.png")
+        self.newimg = "background.png"
+        return;
 
-    # The images to show.
-    img: list[str]
-
-    async def handle_upload(self, files: list[rx.UploadFile]):
-        """Handle the upload of file(s).
-
-        Args:
-            files: The uploaded files.
-        """
-        for file in files:
-            upload_data = await file.read()
-            outfile = rx.get_asset_path(file.filename)
-
-            # Save the file.
-            with open(outfile, "wb") as file_object:
-                file_object.write(upload_data)
-
-            # Update the img var.
-            self.img.append(file.filename)
-
-
-color = "rgb(107,99,246)"
+    @rx.var
+    def img_to_show(self) -> str:
+        return self.newimg
 
 def index():
     """The main view."""
-    return rx.vstack(
-        rx.upload(
-            rx.vstack(
-                rx.button(
-                    "Select File",
-                    color=color,
-                    bg="white",
-                    border=f"1px solid {color}",
-                ),
-                rx.text(
-                    "Drag and drop files here or click to select files"
-                ),
+    return rx.hstack(
+        rx.vstack(        
+            rx.image(src=State.img, width="200px", height="auto"),
+            rx.text("Your Image",
+                    height = "30px",
+                    width = "auto"
+                    ),
+            padding="10em",
+        ),
+        rx.vstack(
+        rx.hstack(
+            rx.select(
+                options,
+                placeholder="Change the color space.",
+                value=State.option,
+                on_change=State.set_option,
+                width = "auto", 
+                height = "30px",
+                color="white"
             ),
-            border=f"1px dotted {color}",
-            padding="5em",
+            rx.button("Show!", on_click=State.updateImage),
         ),
-        rx.button(
-            "Upload",
-            on_click=lambda: State.handle_upload(
-                rx.upload_files()
-            ),
+            rx.image(src=State.img_to_show, width="200px", height="auto"),
+            padding="10em",
         ),
-        rx.foreach(
-            State.img, lambda img: rx.image(src=img)
-        ),
-        padding="5em",
     )
 
 # Add state and page to the app.
